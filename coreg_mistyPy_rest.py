@@ -1,13 +1,10 @@
-from flask import Flask, request, jsonify, send_from_directory
+from mistyPy.Robot import Robot
+from mistyPy.Events import Events
 import requests
 import time
 import json
 import websocket
 import threading
-from mistyPy.Robot import Robot
-from mistyPy.Events import Events
-# mistyPy has : requests json threading time websocket
-
 
 ## MISTY URL AND ENDPOINTS
 MISTY_URL = "http://172.26.189.224"
@@ -48,9 +45,10 @@ acc_Init = None
 prev_arm_position = INIT_ARM_POS
 last_move_time = 0
 
-
 #init robot
 misty = Robot("172.26.189.224")
+
+
 
 # helper function: read serial
 # returns float: accelerometer value
@@ -168,32 +166,7 @@ def move_misty_arms(delta_robot):
         return
 
     #else
-    print(f"Moving misty's arms to {delta_robot}")
-    payload = {
-        "leftArmPosition": delta_robot,
-        "rightArmPosition": delta_robot,
-        "LeftArmVelocity": 5,
-        "RightArmVelocity": 5,
-    }
-    try:
-            response = requests.post(
-                arms_url,
-                headers={"Content-Type": "application/json"},
-                data=json.dumps(payload))
-        
-            if response.status_code == 200:
-                print("Arms moved successfully")
-                print(response.json())  # Print response from Misty (optional)
-            else:
-                print(f"Error: {response.status_code}")
-
-    #timeout exception        
-    except requests.exceptions.Timeout:
-        print("Timeout occurred while trying to connect to Misty")
-
-    #failure to send request request
-    except requests.exceptions.RequestException as e:
-        print(f"Error making request: {e}")
+    misty.MoveArms(delta_robot, delta_robot, 100, 100)
 
 #init misty
 def init_misty(initial_pos_arm = INIT_ARM_POS):
@@ -234,25 +207,22 @@ def run_interaction():
         misty_synchronize(filt_accel, acc_Init)
 
 
-
-
+        
 try:
     #init misty:
     print("Misty initializing...")
-    misty.MoveArm("right", -28, 100)
-    time.sleep(5)
-    misty.MoveArm("left", -28, 100)
-    print("misty arm movements complete")
-    # init_misty(INIT_ARM_POS)
-    # print("Misty initialization complete.")
-    # time.sleep(5) # wait for 5 a second
+    # misty.MoveArm("right", -28, 100)
+    # time.sleep(5)
+    # misty.MoveArm("left", -28, 100)
+    # print("misty arm movements complete")
+    init_misty(INIT_ARM_POS)
+    print("Misty initialization complete.")
+    time.sleep(5) # wait for 5 a second
 
-    # # run code
-    # run_interaction()
+    # run code
+    run_interaction()
 
 except KeyboardInterrupt:
     # ctrl + c --> keyboard interrupt
     print("Exiting loop.")
     stop_misty()
-
-
